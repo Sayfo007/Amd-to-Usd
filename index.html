@@ -205,8 +205,9 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
   if(!native)return;
   (async()=>{
     try{
-      const AdMob=Capacitor.registerPlugin("AdMob");
-      log("ads: plugin available="+Capacitor.isPluginAvailable("AdMob"));
+      const AdMob=(Capacitor.Plugins&&Capacitor.Plugins.AdMob)||(typeof Capacitor.registerPlugin==="function"?Capacitor.registerPlugin("AdMob"):null);
+      log("ads: plugin found="+!!AdMob+" registered="+Object.keys(Capacitor.Plugins||{}).join(","));
+      if(!AdMob)throw new Error("AdMob plugin not found in this build");
       ["bannerAdLoaded","bannerAdFailedToLoad","bannerAdSizeChanged"].forEach(n=>{
         try{AdMob.addListener(n,e=>log("event "+n+" "+JSON.stringify(e||{})))}catch(e){}});
       await timeout(AdMob.initialize({initializeForTesting:TEST_ADS}),8000);
