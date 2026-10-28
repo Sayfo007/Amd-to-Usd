@@ -26,14 +26,38 @@ jobs:
           npx cap sync android
       - name: Set app icon
         run: |
-          sudo apt-get update
-          sudo apt-get install -y imagemagick
-          IM=$(command -v magick || command -v convert)
           R=android/app/src/main/res
           rm -rf $R/mipmap-anydpi-v26
-          for p in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-            d=${p%%:*}; s=${p##*:}
+          for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
             for n in ic_launcher ic_launcher_round ic_launcher_foreground; do
-              $IM icon-512.png -resize ${s}x${s} $R/mipmap-$d/$n.png
+              cp icon-192.png $R/mipmap-$d/$n.png
             done
           done
+      - name: Build release APK
+        working-directory: android
+        run: ./gradlew assembleRelease
+      - name: Sign APK
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          KS_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > release.keystore
+          else
+            KS_PASS=android; KS_ALIAS=sayfodroid
+            keytool -genkeypair -keystore release.keystore -storepass $KS_PASS \
+              -alias $KS_ALIAS -keyalg RSA -keysize 2048 -validity 10000 \
+              -dname "CN=SAYFODROID"
+          fi
+          $BT/zipalign -p 4 android/app/build/outputs/apk/release/app-release-unsigned.apk aligned.apk
+          $BT/apksigner sign --ks release.keystore --ks-pass pass:$KS_PASS \
+            --ks-key-alias $KS_ALIAS --out CurrencyExchange.apk aligned.apk
+          $BT/apksigner verify CurrencyExchange.apk
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Currency Exchange v1.0.${{ github.run_number }}
+          files: CurrencyExchange.apk
