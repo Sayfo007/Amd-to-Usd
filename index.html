@@ -8,6 +8,9 @@
 <meta charset="utf-8">
 <meta name="author" content="SAYFODROID">
 <meta name="application-name" content="Currency Exchange by SAYFODROID">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#131a2c">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Currency Converter</title>
 <style>
@@ -185,6 +188,7 @@ fetch("https://open.er-api.com/v6/latest/USD").then(r=>r.json()).then(d=>{
   if(d&&d.rates){rates=d.rates;live=true;stamp=new Date(d.time_last_update_utc).toLocaleDateString(lang);apply(false)}
 }).catch(()=>{});
 setTimeout(()=>{const sp=$("splash");sp.classList.add("out");setTimeout(()=>sp.remove(),600)},2000);
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 </script>
 </body>
 </html>
