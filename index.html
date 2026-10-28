@@ -193,7 +193,7 @@ setTimeout(()=>{const sp=$("splash");sp.classList.add("out");setTimeout(()=>sp.r
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
 // ---- AdMob banner (Android app only) ----
 (function(){
-  const TEST_ADS=true; // change to false after the test banner shows correctly
+  const TEST_ADS=false; // true = Google test ads + on-screen debug log
   const AD_UNIT="ca-app-pub-8500833036916424/4920742389";
   // Debug log box (only while TEST_ADS is true)
   const log=m=>{if(!TEST_ADS)return;try{
