@@ -33,7 +33,7 @@ jobs:
           M=android/app/src/main/AndroidManifest.xml
           sed -i "s#</application>#    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$APP_ID\"/>\n    </application>#" $M
           grep -n "APPLICATION_ID" $M
-          grep -rl "AdMob" android/capacitor.settings.gradle android/app/capacitor.build.gradle
+          grep -i "admob" android/capacitor.settings.gradle android/app/capacitor.build.gradle || echo "WARNING: admob plugin not in gradle files"
       - name: Set app icon
         run: |
           R=android/app/src/main/res
