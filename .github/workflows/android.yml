@@ -28,8 +28,8 @@ jobs:
         env:
           ADMOB_APP_ID: ${{ secrets.ADMOB_APP_ID }}
         run: |
-          # Falls back to Google's public TEST app ID until you add the ADMOB_APP_ID secret
-          APP_ID="${ADMOB_APP_ID:-ca-app-pub-3940256099942544~3347511713}"
+          # Your AdMob App ID (can be overridden with an ADMOB_APP_ID repo secret)
+          APP_ID="${ADMOB_APP_ID:-ca-app-pub-8500833036916424~8117751360}"
           M=android/app/src/main/AndroidManifest.xml
           sed -i "s#</application>#    <meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$APP_ID\"/>\n    </application>#" $M
           grep -n "APPLICATION_ID" $M
