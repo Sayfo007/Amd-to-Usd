@@ -63,6 +63,7 @@ input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid 
 #plist button{padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:var(--f);text-align:start;cursor:pointer;font-size:.95rem}
 #plist button.sel{border-color:var(--a2)}
 #extra.open{display:grid}
+body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 </style>
 </head>
 <body>
@@ -189,6 +190,25 @@ fetch("https://open.er-api.com/v6/latest/USD").then(r=>r.json()).then(d=>{
 }).catch(()=>{});
 setTimeout(()=>{const sp=$("splash");sp.classList.add("out");setTimeout(()=>sp.remove(),600)},2000);
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+// ---- AdMob banner (Android app only) ----
+(function(){
+  const TEST_ADS=true; // change to false after the test banner shows correctly
+  const AD_UNIT="ca-app-pub-8500833036916424/4920742389";
+  try{
+    if(!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()))return;
+    const AdMob=Capacitor.registerPlugin("AdMob");
+    (async()=>{
+      try{
+        await AdMob.initialize();
+        try{
+          const c=await AdMob.requestConsentInfo();
+          if(c.isConsentFormAvailable&&c.status==="REQUIRED")await AdMob.showConsentForm();
+        }catch(e){}
+        await AdMob.showBanner({adId:AD_UNIT,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",margin:0,isTesting:TEST_ADS});
+      }catch(e){}
+    })();
+  }catch(e){}
+})();
 </script>
 </body>
 </html>
