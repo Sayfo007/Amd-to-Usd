@@ -104,6 +104,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
     </div>
     <div class="foot"><span id="status"></span><button class="link" id="chlang"></button></div>
   </div>
+<div id="adlog" hidden style="margin-top:12px;background:rgba(0,0,0,.45);color:#7CFC00;font:12px monospace;padding:8px 10px;border-radius:10px;white-space:pre-wrap"></div>
 </main>
 
 <script>
@@ -194,20 +195,31 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
 (function(){
   const TEST_ADS=true; // change to false after the test banner shows correctly
   const AD_UNIT="ca-app-pub-8500833036916424/4920742389";
-  try{
-    if(!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform()))return;
-    const AdMob=Capacitor.registerPlugin("AdMob");
-    (async()=>{
+  // Debug log box (only while TEST_ADS is true)
+  const log=m=>{if(!TEST_ADS)return;try{
+    const box=document.getElementById("adlog");if(!box)return;
+    box.hidden=false;box.textContent+=m+"\n"}catch(e){}};
+  const timeout=(p,ms)=>Promise.race([p,new Promise((_,r)=>setTimeout(()=>r(new Error("timeout "+ms+"ms")),ms))]);
+  const native=!!(window.Capacitor&&Capacitor.isNativePlatform&&Capacitor.isNativePlatform());
+  log("ads: native="+native+" platform="+(window.Capacitor&&Capacitor.getPlatform?Capacitor.getPlatform():"none"));
+  if(!native)return;
+  (async()=>{
+    try{
+      const AdMob=Capacitor.registerPlugin("AdMob");
+      log("ads: plugin available="+Capacitor.isPluginAvailable("AdMob"));
+      ["bannerAdLoaded","bannerAdFailedToLoad","bannerAdSizeChanged"].forEach(n=>{
+        try{AdMob.addListener(n,e=>log("event "+n+" "+JSON.stringify(e||{})))}catch(e){}});
+      await timeout(AdMob.initialize({initializeForTesting:TEST_ADS}),8000);
+      log("ads: initialized");
       try{
-        await AdMob.initialize();
-        try{
-          const c=await AdMob.requestConsentInfo();
-          if(c.isConsentFormAvailable&&c.status==="REQUIRED")await AdMob.showConsentForm();
-        }catch(e){}
-        await AdMob.showBanner({adId:AD_UNIT,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",margin:0,isTesting:TEST_ADS});
-      }catch(e){if(TEST_ADS){const st=document.getElementById("status");if(st)st.textContent="ads: "+(e&&e.message||e)}}
-    })();
-  }catch(e){}
+        const c=await timeout(AdMob.requestConsentInfo(),5000);
+        log("ads: consent "+c.status);
+        if(c.isConsentFormAvailable&&c.status==="REQUIRED")await AdMob.showConsentForm();
+      }catch(e){log("ads: consent skipped ("+(e.message||e)+")")}
+      await AdMob.showBanner({adId:AD_UNIT,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",margin:0,isTesting:TEST_ADS});
+      log("ads: showBanner called");
+    }catch(e){log("ads ERROR: "+(e&&e.message||JSON.stringify(e)))}
+  })();
 })();
 </script>
 </body>
