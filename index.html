@@ -205,7 +205,7 @@ if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWork
           if(c.isConsentFormAvailable&&c.status==="REQUIRED")await AdMob.showConsentForm();
         }catch(e){}
         await AdMob.showBanner({adId:AD_UNIT,adSize:"ADAPTIVE_BANNER",position:"BOTTOM_CENTER",margin:0,isTesting:TEST_ADS});
-      }catch(e){}
+      }catch(e){if(TEST_ADS){const st=document.getElementById("status");if(st)st.textContent="ads: "+(e&&e.message||e)}}
     })();
   }catch(e){}
 })();
